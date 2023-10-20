@@ -62,7 +62,6 @@ function out_picture = myremovecom(in_picture, n)
         obj_count = obj_count + 1;
         points_count = size(points, 2);
     end
-    display(obj_count);
     obj_count = obj_count - 1;
     t = 1;
     for i = 1:obj_count
@@ -72,8 +71,10 @@ function out_picture = myremovecom(in_picture, n)
         end
     end
     out_picture = zeros(size(in_picture));
-    ind=sub2ind(size(in_picture),new_obj{1}(1,:),new_obj{1}(2,:));
-    out_picture(ind) = 1;
+    for i = 1:t-1
+        ind=sub2ind(size(in_picture),new_obj{i}(1,:),new_obj{i}(2,:));
+        out_picture(ind) = 1;
+    end
 end
 
 
