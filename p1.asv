@@ -17,9 +17,7 @@ ther = find_ther(picture) - 20;
 picture = ~mybinaryfun(picture, ther);
 subplot(1,2,2)
 imshow(picture)
-picture = myremovecom(picture, 500);
-subplot(1,3,1)
-imshow(logical(picture))
+
 
 function gray_image = mygrayfun(image)
     red_channel = image(:, :, 1);
@@ -36,6 +34,13 @@ function thereshold = find_ther(image)
     thereshold = (min(image) + max(image)) / 2;
 end
 
+function partitioned_object = object_recog(image)
+    [row,column]=find(picture==1);
+    POINTS=[row';column'];
+    current_obj_num=1;
+    POINTS_NUM=size(POINTS,2);
+    
+end
 
 function out_picture = myremovecom(in_picture, n)
     [row, col] = find(in_picture == 1);
@@ -62,18 +67,14 @@ function out_picture = myremovecom(in_picture, n)
         obj_count = obj_count + 1;
         points_count = size(points, 2);
     end
-    display(obj_count);
     obj_count = obj_count - 1;
     t = 1;
     for i = 1:obj_count
         if size(obj{i}, 2) > n
-            new_obj{t} = obj{i};
-            t = t + 1;
+            new_obj{z} = obj{i};
+            z = z + 1;
         end
-    end
-    out_picture = zeros(size(in_picture));
-    ind=sub2ind(size(in_picture),new_obj{1}(1,:),new_obj{1}(2,:));
-    out_picture(ind) = 1;
+        
 end
 
 
