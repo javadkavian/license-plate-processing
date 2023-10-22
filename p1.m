@@ -20,6 +20,37 @@ imshow(picture)
 picture = myremovecom(picture, 500);
 subplot(1,3,1)
 imshow(logical(picture))
+background = myremovecom(picture, 3000);
+picture = picture - background;
+subplot(1, 3, 3)
+imshow(picture);
+[L, Ne] = mysegmentation(picture);
+load trainingset;
+num_of_letters = size(train, 2);
+
+figure
+output = [];
+test = [];
+for n=1:Ne
+    [r, c] = find(L == n);
+    Y = picture(min(r):max(r), min(c):max(c));
+    Y = imresize(Y, [42, 24]);
+    ro = zeros(1, num_of_letters);
+    for k=1:num_of_letters
+        ro(k) = corr2(train{1, k}, Y);
+    end
+    [max_cor, ind] = max(ro);
+    if max_cor > .45
+        out = cell2mat(train(2, ind));
+        output = [output out];
+    end
+end
+file = fopen('number_Plate.txt', 'wt');
+fprintf(file,'%s\n',output);
+fclose(file);
+winopen('number_Plate.txt')
+toc
+
 
 function gray_image = mygrayfun(image)
     red_channel = image(:, :, 1);
@@ -37,7 +68,7 @@ function thereshold = find_ther(image)
 end
 
 
-function out_picture = myremovecom(in_picture, n)
+function [out_picture,ther] = myremovecom(in_picture, n)
     [row, col] = find(in_picture == 1);
     points = [row';col'];
     obj_count = 1;
@@ -70,6 +101,7 @@ function out_picture = myremovecom(in_picture, n)
             t = t + 1;
         end
     end
+    ther = max(obj{i},2);
     out_picture = zeros(size(in_picture));
     for i = 1:t-1
         ind=sub2ind(size(in_picture),new_obj{i}(1,:),new_obj{i}(2,:));
@@ -86,6 +118,41 @@ index=find(diff(1,:)<=1 & diff(2,:)<=1);
 newpoints=POINTS(:,index);
 POINTS(:,index)=[];
 end
+
+function [out_picture, num_objects] = mysegmentation(in_picture)
+    [row, col] = find(in_picture == 1);
+    points = [row'; col'];
+    obj_count = 1;
+    points_count = size(points, 2);
+    while points_count > 0
+        initial_point = points(:, 1);
+        points(:, 1) = [];
+        [points, new_points] = close_points(initial_point, points);
+        cur_obj = [initial_point new_points];
+        new_points_len = size(new_points, 2);
+        while new_points_len > 0
+            new_points2 = [];
+            for i = 1:new_points_len
+                [points, new_points1] = close_points(new_points(:, i), points);
+                new_points2 = [new_points2 new_points1];
+            end
+            cur_obj = [cur_obj new_points2];
+            new_points = new_points2;
+            new_points_len = size(new_points, 2);
+        end
+        obj{obj_count} = cur_obj;
+        obj_count = obj_count + 1;
+        points_count = size(points, 2);
+    end
+    num_objects = obj_count - 1;
+    out_picture = zeros(size(in_picture));
+    for i = 1:num_objects
+        ind = sub2ind(size(in_picture), obj{i}(1,:), obj{i}(2,:));
+        out_picture(ind) = i;
+    end
+end
+
+
 
 
 
