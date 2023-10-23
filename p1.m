@@ -5,25 +5,13 @@ tic;
 [file,path]=uigetfile({'*.jpg;*.bmp;*.png;*.tif'},'Choose the image');
 s=[path,file];
 picture=imread(s);
-figure
-subplot(1,2,1)
-imshow(picture)
 picture = imresize(picture, [300, 500]);
 picture=mygrayfun(picture);
-figure
-subplot(1,2,1)
-imshow(picture)
 ther = find_ther(picture) - 20;
 picture = ~mybinaryfun(picture, ther);
-subplot(1,2,2)
-imshow(picture)
 picture = myremovecom(picture, 500);
-subplot(1,3,1)
-imshow(logical(picture))
 background = myremovecom(picture, 3000);
 picture = picture - background;
-subplot(1, 3, 3)
-imshow(picture);
 [L, Ne] = mysegmentation(picture);
 load trainingset;
 num_of_letters = size(train, 2);

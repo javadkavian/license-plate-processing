@@ -32,5 +32,4 @@ for n=1:Ne
     end
 end
 fclose(file);
-winopen('number_Plate_Persian.txt')
-toc
+winopen('number_Plate_Persian.txt');

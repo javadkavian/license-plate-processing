@@ -7,24 +7,19 @@ load trainingset;
 [file, path] = uigetfile('*.jpg;*.png;*.jpeg;*.bmp');
 picture = imread([path, file]);
 picture = rgb2gray(picture);
-imshow(picture);
 threshold =  graythresh(picture);
 picture = ~imbinarize(picture, threshold-0.1);
-imshow(picture);
 width = 600;
 length = 800;
 picture = imresize(picture, [width, length]);
-picture = bwareaopen(picture, 60); 
-imshow(picture);
-picture = picture - bwareaopen(picture, 1670);
-imshow(picture);
-
-max_rows_changes = 0;
-max_cols_changes = 0;
+picture = bwareaopen(picture, 50); 
+picture = picture - bwareaopen(picture, 2000);
+maximum_horizental_changes = 0;
+maximum_vertical_changes = 0;
 y_max_changes = 1;
 x_max_changes = 1;
-rows_changes_count = zeros(1, width);
-cols_changes_count = zeros(1, length);
+horizental_changes_count = zeros(1, width);
+vertical_changes_count = zeros(1, length);
 
 for i=1: width
     changes_count = 0;
@@ -33,29 +28,29 @@ for i=1: width
             changes_count = changes_count + 1;
         end
     end
-    rows_changes_count(i) = changes_count;
-    if changes_count > max_rows_changes && i > 340 && i < 500
-        max_rows_changes = changes_count;
+    horizental_changes_count(i) = changes_count;
+    if changes_count > maximum_horizental_changes && i > 300 && i < 500
+        maximum_horizental_changes = changes_count;
         y_max_changes = i;
     end
 end
 
-y_down = width - 100;
-y_top = 100;
+down_bound = width - 100;
+up_bound = 100;
 
-x_right = length - 100;
-x_left = 100;
+right_bound = length - 100;
+left_bound = 100;
 
 for i=100: y_max_changes
-    if abs(max_rows_changes - rows_changes_count(i)) < 20 && y_max_changes - i < 50
-        y_top = i;
+    if abs(horizental_changes_count(i) - maximum_horizental_changes) < 20 && y_max_changes - i < 50
+        up_bound = i;
         break;
     end
 end    
 
 for i=width - 100:-1: y_max_changes
-    if abs(max_rows_changes - rows_changes_count(i)) < 20 && i - y_max_changes < 50
-        y_down = i;
+    if abs(horizental_changes_count(i) - maximum_horizental_changes) < 20 && i - y_max_changes < 50
+        down_bound = i;
         break;
     end
 end
@@ -67,32 +62,70 @@ for j=1: length
             changes_count = changes_count + 1;
         end
     end
-    cols_changes_count(i) = changes_count;
-    if changes_count > max_cols_changes && j > 300 && j < 400
-        max_cols_changes = changes_count;
+    vertical_changes_count(i) = changes_count;
+    if changes_count > maximum_vertical_changes && j > 300 && j < 500
+        maximum_vertical_changes = changes_count;
         x_max_changes = j;
     end
 end
 
 for j=220: x_max_changes
-    if abs(max_cols_changes - cols_changes_count(j)) < 30 && x_max_changes - j < 230
-        x_left = j;
+    if abs(vertical_changes_count(j) - maximum_vertical_changes) < 40 && x_max_changes - j < 300
+        left_bound = j;
         break;
     end
 end
 
 for j=length - 200:-1: x_max_changes
-    if abs(max_cols_changes - cols_changes_count(j)) < 30 && j - x_max_changes < 300
-        x_right = j;
+    if abs(vertical_changes_count(j) - maximum_vertical_changes) < 40 && j - x_max_changes < 300
+        right_bound = j;
         break;
     end
 end
 
-delta_y = y_down - y_top;
+width_of_picture = down_bound - up_bound;
 
-if delta_y < 60
-    y_down = y_down + 80 - delta_y;
+if width_of_picture < 50
+    down_bound = down_bound + 90 - width_of_picture;
 end
 
-plate = picture(y_top:y_down,x_left:x_right);
-imshow(plate);
+picture = picture(up_bound:down_bound,left_bound:right_bound);
+picture = bwareaopen(picture, 100);
+[L, Ne] = bwlabel(picture);
+load trainingset;
+file = fopen('number_Plate_Persian.txt', 'wt');
+output = [];
+numOfLetters = size(train, 2);
+for n=1:Ne
+    [r, c] = find(L == n);
+    Y = picture(min(r):max(r), min(c):max(c));
+    ro = zeros(1, numOfLetters);
+    for k = 1:numOfLetters
+        [row, col] = size(train{1,k});
+        Y = imresize(Y, [row, col]);
+        ro(k) = corr2(train{1,k},Y);
+    end
+    [MAXRO, pos] = max(ro);
+    if MAXRO>.45
+        out = cell2mat(train(2,pos));       
+        output = [output out];
+        fprintf(file,'%s\n', out);
+    end
+end
+fclose(file);
+winopen('number_Plate_Persian.txt');
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
